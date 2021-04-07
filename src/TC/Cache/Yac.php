@@ -1,4 +1,5 @@
 <?php
+
 namespace TC\Cache;
 /**
  * 寄存器缓存类
@@ -18,7 +19,7 @@ class Yac extends \TC\Cache\Cache
      */
     protected function _formatKey($key)
     {
-        if(strlen($this->prefix.$key)>48) {
+        if (strlen($this->prefix . $key) > 48) {
             return md5($key);
         }
         return $key;
@@ -32,7 +33,7 @@ class Yac extends \TC\Cache\Cache
      */
     public function getCache()
     {
-        if(!($this->_cache instanceof \Yac)) {
+        if (!($this->_cache instanceof \Yac)) {
             $this->_cache = new \Yac($this->prefix);
         }
         return $this->_cache;
@@ -47,10 +48,10 @@ class Yac extends \TC\Cache\Cache
      * zhaozhiwei
      * 2021/4/6 18:37
      */
-    public function set($key,$value,$timeout=0)
+    public function set($key, $value, $timeout = 0)
     {
         $key = $this->_formatKey($key);
-        return $this->getCache()->set($key,$value,$timeout);
+        return $this->getCache()->set($key, $value, $timeout);
     }
 
     /**
@@ -61,14 +62,14 @@ class Yac extends \TC\Cache\Cache
      * zhaozhiwei
      * 2021/4/6 18:38
      */
-    public function mset(array $kvs,$timeout=0)
+    public function mset(array $kvs, $timeout = 0)
     {
         $hashKeys = [];
-        foreach ($kvs as $key=> $value) {
-            $hashKeys[ $this->_formatKey($key) ] = $value;
+        foreach ($kvs as $key => $value) {
+            $hashKeys[$this->_formatKey($key)] = $value;
         }
 
-        return $this->getCache()->set($hashKeys,$timeout);
+        return $this->getCache()->set($hashKeys, $timeout);
     }
 
     /**
@@ -95,7 +96,7 @@ class Yac extends \TC\Cache\Cache
     {
         $hashKeys = [];
         foreach ($keys as $value) {
-            $hashKeys[ $this->_formatKey($value) ] = $value;
+            $hashKeys[$this->_formatKey($value)] = $value;
         }
         unset($keys);
 
@@ -103,7 +104,7 @@ class Yac extends \TC\Cache\Cache
 
         $data = [];
         foreach ($keyValues as $hashKey => $value) {
-            $data[ $hashKeys[ $hashKey ] ] = $value;
+            $data[$hashKeys[$hashKey]] = $value;
         }
 
         return $data;
@@ -118,11 +119,11 @@ class Yac extends \TC\Cache\Cache
      */
     public function delete($keys)
     {
-        if(is_array($keys)) {
-            $hashKeys = array_map(function($value){
+        if (is_array($keys)) {
+            $hashKeys = array_map(function ($value) {
                 return $this->_formatKey($value);
-            },$keys);
-        }else {
+            }, $keys);
+        } else {
             $hashKeys = $this->_formatKey($keys);
         }
 

@@ -1,9 +1,16 @@
 <?php
+
 namespace TC\Cache;
+
+/**
+ * 二级缓存类
+ * Class Wave
+ * @package TC\Cache
+ */
 class Wave
 {
 
-    public $dbEmpty= -1;
+    public $dbEmpty = -1;
 
     public $saveTimes = 3;
 
@@ -12,13 +19,14 @@ class Wave
     public $redisCache;
 
     public $lockPrefix = 'redis:lock:';
+
     public function __construct()
     {
-        $this->localCache=new \TC\Cache\Yac();
-        $this->redisCache=new \TC\Cache\Redis();
+        $this->localCache = new \TC\Cache\Yac();
+        $this->redisCache = new \TC\Cache\Redis();
     }
 
-    private function _waveDataIsExpire($data,$time)
+    private function _waveDataIsExpire($data, $time)
     {
         return $data['logicExpireAt'] <= $time;
     }
@@ -39,17 +47,17 @@ class Wave
      * @author zhaozhiwei
      * @date 2021-02-18 8:38
      */
-    public function waveGet($key,callable $callback,$timeout)
+    public function waveGet($key, callable $callback, $timeout)
     {
-        $time   = time();
+        $time = time();
         //优先使用yac缓存
         $yacResult = $this->localCache->get($key);
         //本地读取到
-        if(!empty($yacResult)) {
-            $isExpire = $this->_waveDataIsExpire($yacResult,$time);
+        if (!empty($yacResult)) {
+            $isExpire = $this->_waveDataIsExpire($yacResult, $time);
 
             //数据未过期
-            if(!$isExpire) {
+            if (!$isExpire) {
                 return $this->_waveReturnData($yacResult);
             }
         }
@@ -58,37 +66,37 @@ class Wave
         $redisResult = $this->redisCache->get($key);
 
         //redis没有读取到，直接数据库读取
-        if(empty($redisResult)) {
-            return $this->waveSet($key,$callback,$timeout);
+        if (empty($redisResult)) {
+            return $this->waveSet($key, $callback, $timeout);
         }
 
         //redis读取到
-        $redisIsExpire = $this->_waveDataIsExpire($redisResult,$time);
+        $redisIsExpire = $this->_waveDataIsExpire($redisResult, $time);
 
         //数据未过期
-        if(!$redisIsExpire) {
+        if (!$redisIsExpire) {
             //其他端更新了redis缓存
-            $this->localCache->set($key,$redisResult,$timeout);
+            $this->localCache->set($key, $redisResult, $timeout);
 
             return $this->_waveReturnData($redisResult);
         }
 
         //数据无效，获得锁
         $redis = $this->redisCache->getRedis();
-        $lockKey = $this->lockPrefix.$key;
+        $lockKey = $this->lockPrefix . $key;
 
         $lockResult = $redis->multi(\Redis::PIPELINE)
             ->incr($lockKey)
-            ->expire($lockKey,3)
+            ->expire($lockKey, 3)
             ->exec();
 
         //没有获取到锁,把redis获取结果返回
-        if($lockResult[0] > 1) {
+        if ($lockResult[0] > 1) {
             return $this->_waveReturnData($redisResult);
         }
 
         //获取到锁，刷新缓存
-        $data = $this->waveSet($key,$callback,$timeout);
+        $data = $this->waveSet($key, $callback, $timeout);
 
         //释放锁
         $redis->del($lockKey);
@@ -97,23 +105,23 @@ class Wave
     }
 
 
-    public function waveSet($key,callable $callback,$timeout)
+    public function waveSet($key, callable $callback, $timeout)
     {
         //数据库读取
         $result = call_user_func($callback);
 
         //格式化数据
         $data = [
-            'data'           => empty($result) ? $this->dbEmpty : $result,
-            'logicExpireAt'  => time()+$timeout,
-            'timeout'        => $timeout
+            'data' => empty($result) ? $this->dbEmpty : $result,
+            'logicExpireAt' => time() + $timeout,
+            'timeout' => $timeout
         ];
 
 
-        $this->localCache->set($key,$data,$timeout);
+        $this->localCache->set($key, $data, $timeout);
 
         //更新redis缓存
-        $this->redisCache->set($key,$data,$this->saveTimes * $timeout);
+        $this->redisCache->set($key, $data, $this->saveTimes * $timeout);
 
         return $result;
     }
@@ -126,16 +134,16 @@ class Wave
         $this->localCache->delete($key);
 
         $result = $this->redisCache->get($key);
-        if(empty($result)) {
+        if (empty($result)) {
             return true;
         }
 
-        if(isset($result['logicExpireAt'])) {
+        if (isset($result['logicExpireAt'])) {
             $result['logicExpireAt'] = 0;
 
             $timeout = isset($result['timeout']) ? (int)$result['timeout'] : 0;
 
-            $this->redisCache->set($key,$result,$this->saveTimes * $timeout);
+            $this->redisCache->set($key, $result, $this->saveTimes * $timeout);
         }
 
         return true;

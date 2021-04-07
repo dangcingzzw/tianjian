@@ -1,4 +1,5 @@
 <?php
+
 namespace TC\Cache;
 abstract class Cache
 {
@@ -25,20 +26,20 @@ abstract class Cache
      */
     protected function _decrypt($data)
     {
-        if(empty($data)) {
+        if (empty($data)) {
             return false;
         }
 
-        return json_decode($data,true)['data'];
+        return json_decode($data, true)['data'];
     }
 
     abstract public function get($key);
 
-    abstract public function set($key,$value,$timeout=0);
+    abstract public function set($key, $value, $timeout = 0);
 
-    abstract public function mget(array  $keys);
+    abstract public function mget(array $keys);
 
-    abstract public function mset(array $kvs,$timeout=0);
+    abstract public function mset(array $kvs, $timeout = 0);
 
     abstract public function delete($key);
 }

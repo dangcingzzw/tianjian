@@ -2,6 +2,11 @@
 
 namespace TC\Cache;
 
+/**
+ * 内存缓存类
+ * Class Redis
+ * @package TC\Cache
+ */
 class Redis extends \TC\Cache\Cache
 {
 

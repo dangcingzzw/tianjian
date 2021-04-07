@@ -1,5 +1,5 @@
 <?php
-namespace log;
+namespace TC\log;
 
 class SeasLog{
 

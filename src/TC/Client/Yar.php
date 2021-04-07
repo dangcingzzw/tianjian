@@ -1,6 +1,11 @@
 <?php
 
 namespace TC\Client;
+/**
+ *
+ * Class Yar
+ * @package TC\Client
+ */
 class Yar
 {
     public $address;
@@ -18,7 +23,7 @@ class Yar
 
     public function call($method,array $params=[])
     {
-        $params['traceId'] = uniqid('yafr_');
+        $params['traceId'] = uniqid('tc_yaf_');
 
         return $this->getClient()->call($method,[ $params ]);
     }
